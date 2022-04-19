@@ -1,4 +1,4 @@
-(ns cladd.core-test
+(ns clad.core-test
   (:require [clojure.test :refer :all]
             [cladd.core :refer :all]))
 
