@@ -5,5 +5,7 @@
 (defn next-value []
   (swap! counter inc))
 
-(defn create-node [op]
-  {:idx (next-value) :op op})
+(defrecord node [idx op parent children adjoint])
+
+(defn create-node [op parent children adjoint]
+  (node. (next-value) op parent children adjoint))
