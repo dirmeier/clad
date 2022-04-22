@@ -37,37 +37,56 @@
    <ws> = <#'[\\s,]+'>
   ")
 
-(defn create-node [node list]
+
+(defn -create-node [parent list]
   (if
     (identical? (get list 0) :list)
+    (-create-node parent (rest list)))
+  (if
+    (identical? (get (first list) 0) :op)
     (let
-      [op (rest list)]
-      list
-      )))
+      [op (get (first list) 1)
+       child (node/create-node op parent [] 0.0 0.0)]
+      (loop [remaining-grand-children list grand-children []]
+        (if (empty? remaining-grand-children)
+          grand-children
+          (let [[part & remaining] remaining-grand-children]
+            (recur remaining (into grand-children (-create-node child (rest list)))))))))
+  (if (and (not (identical? (get list 0) :list))
+           (not (identical? (get (first list) 0) :op)))
+    (loop [remaining-children list children []]
+      (if (empty? remaining-children)
+        children
+        (let [[part & remaining] remaining-children
+              value (get part 1)
+              child (node/create-node nil parent nil 0.0 value)]
+          (recur remaining (conj children child))))
+        )
+      ))
 
-(defn ^:private traverse [node rest]
-  (loop [nodes rest]
+(defn ^:private traverse [parent rest]
+  (loop [nodes rest leaves []]
     (if
-      (not (empty? nodes))
+      (empty? nodes)
+      leaves
       (let [[part & remaining] nodes]
-        (println part)
-        (create-node node part)
-        (recur remaining)))))
+        (recur remaining (into leaves (-create-node parent part)))))
+    )
+  )
 
 (defn ^:private create-root [graph]
   (let [root-node (first graph)]
     (if
       (identical? (get root-node 0) :op)
       (let [root-op (get root-node 1)]
-        (node/create-node root-op nil [] 1.0)))))
+        (node/create-node root-op nil [] 1.0 nil)))))
 
 (defn expression-graph [f]
   (let [graph (rest (get ((insta/parser grammar) f) 1))
         root (create-root graph)]
+    ;(println root)
+    ;(println (rest graph))
     (println graph)
-    (println (rest graph))
-    (println "----------")
-    (traverse root (rest graph))
-    ))
+    (traverse root (rest graph))))
 
 
