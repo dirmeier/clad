@@ -2,4 +2,6 @@
 (require '[clad.expr :as expr])
 
 (defn grad [f idx]
-  (expr/expression-graph f))
+  (let [graph (expr/expression-graph f)]
+    (doseq [item graph]
+      (println item))))
