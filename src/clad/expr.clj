@@ -72,7 +72,6 @@
 (defn expression-graph [f]
   (let [graph (rest (get ((insta/parser grammar) f) 1))
         root (create-root graph)]
-    (print graph)
     (traverse root (rest graph))))
 
 

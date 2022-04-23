@@ -5,5 +5,7 @@
             :url  "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [instaparse "1.4.11"]
-                 [org.clojure/tools.analyzer "1.1.0"] [org.clojure/tools.analyzer.jvm "1.2.2"]]
+                 [org.clojure/tools.analyzer "1.1.0"]
+                 [net.mikera/core.matrix "0.62.0"]
+                 [org.clojure/tools.analyzer.jvm "1.2.2"]]
   :repl-options {:init-ns clad.core})
