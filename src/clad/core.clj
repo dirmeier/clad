@@ -7,7 +7,7 @@
      (Math/log sigma)
      (/ (Math/log (* 2.0 Math/PI)) 2.0)))
 
-(def log-pdf "(/ (* 2.0 Math/PI) 7.0)")
+(def log-pdf "(* (* 2.0 Math/PI) 7.0)")
 
 (defn -main
   [& args]

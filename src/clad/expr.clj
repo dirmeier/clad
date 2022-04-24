@@ -38,7 +38,7 @@
   ")
 
 
-(defn -create-node [parent list]
+(defn ^:private -create-node [parent list]
   (if (identical? (get list 0) :list)
     (-create-node parent (rest list))
     (if (identical? (get (first list) 0) :op)
@@ -50,9 +50,9 @@
             grand-children
             (let [[part & remaining] remaining-grand-children]
               (recur remaining (conj grand-children (-create-node child part)))))))
-      (node/create-node (get list 0) parent nil 0.0 (get list 1)))))
+      (node/create-node (get list 0) parent [] 0.0 (get list 1)))))
 
-(defn ^:private traverse [parent rest]
+(defn ^:private -build-tree [parent rest]
   (loop [nodes rest leaves []]
     (if (empty? nodes)
       leaves
@@ -62,16 +62,38 @@
                      (let [n (-create-node parent part)]
                        (if (vector? n) n [n]))))))))
 
-(defn ^:private create-root [graph]
+(defn ^:private -create-root [graph]
   (let [root-node (first graph)]
     (if
       (identical? (get root-node 0) :op)
       (let [root-op (get root-node 1)]
         (node/create-node root-op nil [] 1.0 nil)))))
 
+
+(defn ^:private -set-parents [graph]
+  (let
+    [adj (node/adjacency graph)]
+    (loop [remaining-nodes graph new-graph {}]
+      (if
+        (empty? remaining-nodes)
+        (set  new-graph)
+        ;(filter (fn [node] (empty? (:children node))) new-graph)
+        (let [[part & remaining] remaining-nodes]
+          (recur
+            (if
+              (or (nil? (:parent part)) (empty? (:parent part)))
+              remaining
+              (conj
+                remaining
+                (let [parent (:parent part)]
+                  (assoc parent :children (conj (:children parent) part)))))
+            ; probably need to update here , too! or remove the parent children pairs and write it in an adj
+            (assoc new-graph part)
+            ))))))
+
 (defn expression-graph [f]
   (let [graph (rest (get ((insta/parser grammar) f) 1))
-        root (create-root graph)]
-    (traverse root (rest graph))))
+        root (-create-root graph)]
+    (-set-parents (-build-tree root (rest graph)))))
 
 
