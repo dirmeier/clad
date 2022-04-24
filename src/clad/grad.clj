@@ -4,8 +4,7 @@
 
 (defn grad [f idx]
   (let [graph (expr/expression-graph f)
-        adj (node/adjacency graph)]
-    (println "------------")
-    (println adj)
+        ;graph (node/bottom-up graph)
+        ]
     (doseq [item graph]
       (println item))))
