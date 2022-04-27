@@ -44,13 +44,13 @@
     (if (identical? (get (first list) 0) :op)
       (let
         [op (get (first list) 1)
-         child (node/create-node op parent [] 0.0 0.0)]
+         child (node/create-unique-tree-node op parent [] 0.0 0.0)]
         (loop [remaining-grand-children (rest list) grand-children []]
           (if (empty? remaining-grand-children)
             grand-children
             (let [[part & remaining] remaining-grand-children]
               (recur remaining (conj grand-children (-create-node child part)))))))
-      (node/create-node (get list 0) parent [] 0.0 (get list 1)))))
+      (node/create-unique-tree-node (get list 0) parent [] 0.0 (get list 1)))))
 
 (defn ^:private -build-tree [parent rest]
   (loop [nodes rest leaves []]
@@ -67,33 +67,15 @@
     (if
       (identical? (get root-node 0) :op)
       (let [root-op (get root-node 1)]
-        (node/create-node root-op nil [] 1.0 nil)))))
+        (node/create-unique-tree-node root-op nil [] 1.0 nil)))))
 
-
-(defn ^:private -set-parents [graph]
-  (let
-    [adj (node/adjacency graph)]
-    (loop [remaining-nodes graph new-graph {}]
-      (if
-        (empty? remaining-nodes)
-        (set  new-graph)
-        ;(filter (fn [node] (empty? (:children node))) new-graph)
-        (let [[part & remaining] remaining-nodes]
-          (recur
-            (if
-              (or (nil? (:parent part)) (empty? (:parent part)))
-              remaining
-              (conj
-                remaining
-                (let [parent (:parent part)]
-                  (assoc parent :children (conj (:children parent) part)))))
-            ; probably need to update here , too! or remove the parent children pairs and write it in an adj
-            (assoc new-graph part)
-            ))))))
 
 (defn expression-graph [f]
-  (let [graph (rest (get ((insta/parser grammar) f) 1))
-        root (-create-root graph)]
-    (-set-parents (-build-tree root (rest graph)))))
+  (let [grammar (rest (get ((insta/parser grammar) f) 1))
+        root (-create-root grammar)
+        graph (-build-tree root (rest grammar))
+        adj (node/adjacency graph)
+        nodes (node/graph-as-set graph)]
+    {:adj adj :nodes nodes}))
 
 
