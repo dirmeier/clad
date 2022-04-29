@@ -4,7 +4,9 @@
 
 (defn grad [f idx]
   (let [graph (expr/expression-graph f)
-        ;graph (node/bottom-up graph)
+        sorted-nodes (node/topological-sort graph)
         ]
+    (println (:adj graph))
+    (println sorted-nodes)
     (doseq [item (:nodes graph)]
       (println item))))
