@@ -17,8 +17,11 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Leiningen: cljfmt:0.8.0" level="project" />
     <orderEntry type="library" name="Leiningen: clojure-complete:0.2.5" level="project" />
+    <orderEntry type="library" name="Leiningen: com.googlecode.java-diff-utils/diffutils:1.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: instaparse:1.4.11" level="project" />
+    <orderEntry type="library" name="Leiningen: lein-cljfmt:0.8.0" level="project" />
     <orderEntry type="library" name="Leiningen: net.mikera/core.matrix:0.62.0" level="project" />
     <orderEntry type="library" name="Leiningen: nrepl:0.6.0" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/clojure:1.10.3" level="project" />
@@ -29,8 +32,10 @@
     <orderEntry type="library" name="Leiningen: org.clojure/spec.alpha:0.2.194" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.analyzer.jvm:1.2.2" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.analyzer:1.1.0" level="project" />
+    <orderEntry type="library" name="Leiningen: org.clojure/tools.cli:1.0.206" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.macro:0.1.5" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/tools.reader:1.3.6" level="project" />
     <orderEntry type="library" name="Leiningen: org.ow2.asm/asm:9.2" level="project" />
+    <orderEntry type="library" name="Leiningen: rewrite-clj:1.0.605-alpha" level="project" />
   </component>
 </module>
