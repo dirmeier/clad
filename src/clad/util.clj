@@ -15,5 +15,5 @@
       arr
       (let [[par & remaining] keys]
         (recur
-          remaining
-          (if (in? lhs par) (conj arr par)))))))
+         remaining
+         (if (in? lhs par) (conj arr par)))))))

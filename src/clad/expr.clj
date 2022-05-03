@@ -38,40 +38,37 @@
    <ws> = <#'[\\s,]+'>
   ")
 
-(defn ^:private -create-node [parent list side]
+(defn ^:private -create-node [parent list]
   (if (identical? (get list 0) :list)
-    (-create-node parent (rest list) side)
+    (-create-node parent (rest list))
     (if (identical? (get (first list) 0) :op)
       (let
        [op (get (first list) 1)
-        child (node/create-node op parent [] 0.0 0.0 side)]
+        child (node/create-node op parent [] 0.0 0.0)]
         (loop [remaining-grand-children (rest list)
-               sides ["left" "right"]
                grand-children []]
           (if (empty? remaining-grand-children)
             grand-children
-            (let [[part & remaining] remaining-grand-children
-                  [curr-side & other-side] sides]
-              (recur remaining other-side (conj grand-children (-create-node child part curr-side)))))))
-      (node/create-node (get list 0) parent [] 0.0 (get list 1) side))))
+            (let [[part & remaining] remaining-grand-children]
+              (recur remaining (conj grand-children (-create-node child part)))))))
+      (node/create-node (get list 0) parent [] 0.0 (get list 1)))))
 
 (defn ^:private -build-tree [parent rest]
-  (loop [nodes rest leaves [] sides ["left" "right"]]
+  (loop [nodes rest leaves []]
     (if (empty? nodes)
-      leaves
-      (let [[part & remaining] nodes [curr-side & other-side] sides]
-        (recur remaining other-side
-           (into leaves
-             (let [n (-create-node parent part curr-side)]
-               (if (vector? n) n [n]))))))))
+     (doall (map (fn [leaf] (assoc leaf :is-leaf true)) leaves))
+      (let [[part & remaining] nodes]
+        (recur remaining
+               (into leaves
+                     (let [n (-create-node parent part)]
+                       (if (vector? n) n [n]))))))))
 
 (defn ^:private -create-root [graph]
   (let [root-node (first graph)]
     (if
      (identical? (get root-node 0) :op)
       (let [root-op (get root-node 1)]
-        (node/create-node root-op nil [] 1.0 0.0 nil)))))
-
+        (node/create-node root-op nil [] 1.0 0.0)))))
 
 (defn ^:private -adjacency [graph]
   (let [n-nodes (+ (reduce max (map (fn [element] (:idx element)) graph)) 1)]
@@ -80,11 +77,11 @@
         adj
         (let [[part & remaining] nodes]
           (recur
-            (if (nil? (:parent part)) remaining (conj remaining (:parent part)))
-            (if
-              (nil? (:idx (:parent part)))
-              adj
-              (m/mset adj (:idx (:parent part)) (:idx part) 1))))))))
+           (if (nil? (:parent part)) remaining (conj remaining (:parent part)))
+           (if
+            (nil? (:idx (:parent part)))
+             adj
+             (m/mset adj (:idx (:parent part)) (:idx part) 1))))))))
 
 (defn ^:private -graph-as-set [graph]
   (loop [remaining-nodes graph new-nodes {}]
@@ -92,12 +89,12 @@
       new-nodes
       (let [[part & remaining] remaining-nodes]
         (recur
-          (if (nil? (:parent part))
-            remaining (conj remaining (:parent part)))
-          (assoc new-nodes (:idx part) {:op (:op part)
-                                        :adjoint (:adjoint part)
-                                        :value (:value part)
-                                        :side (:side part)}))))))
+         (if (nil? (:parent part))
+           remaining (conj remaining (:parent part)))
+         (assoc new-nodes (:idx part) {:op (:op part)
+                                       :adjoint (:adjoint part)
+                                       :is-leaf (:is-leaf part)
+                                       :value (:value part)}))))))
 
 (defn expression-graph [f]
   (let [grammar (rest (get ((insta/parser grammar) f) 1))
