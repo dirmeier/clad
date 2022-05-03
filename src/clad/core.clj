@@ -12,6 +12,6 @@
 (defn -main
   [& args]
   ;(print log-pdf)
-  (grad/grad log-pdf 1)
+  (println (grad/grad log-pdf 2))
   ;(print ((grad/grad log-pdf 1) 1.0 0.0 1.0))
   )
