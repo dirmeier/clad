@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      - uses: DeLaGuardo/setup-clojure@5.0
+        with:
+          cli: latest
+          lein: latest
+          boot: latest
+          bb: latest
+      - uses: DeLaGuardo/setup-clj-kondo@master
+        with:
+          version: '2020.04.05'
+      - name: Run lints
+        run: clj-kondo --lint src
+      - name: Run unit tests
+        run: lein test

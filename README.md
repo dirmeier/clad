@@ -1,22 +1,27 @@
 # clad
 
-A Clojure library designed to ... well, that part is up to you.
+[![Project Status](http://www.repostatus.org/badges/latest/concept.svg)](http://www.repostatus.org/#concept)
+[![Build status](https://github.com/dirmeier/clad/workflows/CI/badge.svg)](https://github.com/dirmeier/clad/actions)
 
-## Usage
+> Reverse-mode autodiff for Clojure
 
-FIXME
+## Introduction
 
-## License
+This package implements a proof-of-concept of reverse-mode autodiff in Clojure. It is mainly thought for learning Clojure,
+offers minimal functionality and lacks (code) quality. 
 
-Copyright © 2022 FIXME
+```{clojure}
+(require '[clad.core :refer [grad]])
 
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
+(defn log-pdf ^double [^double y ^double mu ^double sigma]
+  (- (/ (Math/pow (- y mu) 2.0) (* -2.0 (Math/pow sigma 2.0)))
+     (Math/log sigma)
+     (/ (Math/log (* 2.0 Math/PI)) 2.0)))
+     
+(def (grad(logpdf, 0) 1.0 0.0 1.0))
+=> -1.0
+```
 
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+## Author
+
+* Simon Dirmeier <a href="mailto:sfyrbnd @ pm me">sfyrbnd @ pm me</a>
