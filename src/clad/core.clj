@@ -5,7 +5,6 @@
             [clad.util :as utl]
             [clojure.core.matrix :as m]))
 
-
 (defn ^:private -bottom-up [graph]
   (let [sorted-node-idxs (graph/topological-sort graph)
         adj (:adj graph)
@@ -16,18 +15,19 @@
         (let [[curr-node-idx & remaining] remaining-node-idxs
               curr-node (get nodes curr-node-idx)]
           (recur
-            remaining
-            (if
-              (= (reduce + (m/get-row adj curr-node-idx)) 0.0)
-              (assoc new-nodes curr-node-idx curr-node)
-              (assoc new-nodes curr-node-idx
-                               (assoc curr-node
-                                 :value
-                                 (reduce
-                                   (ops/get-op (:op curr-node))
-                                   (map
-                                     (fn [idx] (:value (get new-nodes idx)))
-                                     (utl/positions #{1} (m/get-row adj curr-node-idx)))))))))))))
+           remaining
+           (if
+            (= (reduce + (m/get-row adj curr-node-idx)) 0.0)
+             (assoc new-nodes curr-node-idx curr-node)
+             (assoc new-nodes curr-node-idx
+                    (assoc
+                      curr-node
+                           :value
+                           (reduce
+                            (ops/get-op (:op curr-node))
+                            (map
+                             (fn [idx] (:value (get new-nodes idx)))
+                             (utl/positions #{1} (m/get-row adj curr-node-idx)))))))))))))
 
 (defn ^:private -get-parent-idxs [adj idx]
   (let [column (m/get-column adj idx)
@@ -49,33 +49,53 @@
               curr-node (get nodes curr-node-idx)
               curr-parent-idxs (-get-parent-idxs adj curr-node-idx)]
           (recur
-            remaining
-            (if
-              (nil? curr-parent-idxs)
-              (assoc new-nodes curr-node-idx curr-node)
-              (loop [remaining-curr-parent-idxs curr-parent-idxs curr-node curr-node]
-                (if
-                  (empty? remaining-curr-parent-idxs)
-                  (assoc new-nodes curr-node-idx curr-node)
-                  (let [[curr-parent-idx & remaining] remaining-curr-parent-idxs
-                        curr-parent (get new-nodes curr-parent-idx)]
-                    (recur
-                      remaining
-                      (let [curr-parent-child-idxs (-get-children-idxs adj curr-parent-idx)
-                            curr-node-equation-idx (utl/which curr-parent-child-idxs curr-node-idx)
-                            adj-fun (ops/get-adjs (:op curr-parent) (first curr-node-equation-idx))
-                            values (map (fn [ii] (:value (get nodes ii))) curr-parent-child-idxs)
-                            adj (adj-fun (:adjoint curr-parent) (:value curr-parent) values)
-                            curr-node (assoc curr-node :adjoint (+ (:adjoint curr-node) adj))]
-                        curr-node))))))))))))
+           remaining
+           (if
+            (nil? curr-parent-idxs)
+             (assoc new-nodes curr-node-idx curr-node)
+             (loop [remaining-curr-parent-idxs curr-parent-idxs curr-node curr-node]
+               (if
+                (empty? remaining-curr-parent-idxs)
+                 (assoc new-nodes curr-node-idx curr-node)
+                 (let [[curr-parent-idx & remaining] remaining-curr-parent-idxs
+                       curr-parent (get new-nodes curr-parent-idx)]
+                   (recur
+                    remaining
+                    (let [curr-parent-child-idxs (-get-children-idxs adj curr-parent-idx)
+                          curr-node-equation-idx (utl/which curr-parent-child-idxs curr-node-idx)
+                          adj-fun (ops/get-adjs (:op curr-parent) (first curr-node-equation-idx))
+                          values (map (fn [ii] (:value (get nodes ii))) curr-parent-child-idxs)
+                          adj (adj-fun (:adjoint curr-parent) (:value curr-parent) values)
+                          curr-node (assoc curr-node :adjoint (+ (:adjoint curr-node) adj))]
+                      curr-node))))))))))))
 
+(defn -set-values [graph x & y] graph)
 
+;(defn grad [f idx]
+;  ; todo: separete expression graph computation and topdown
+;  (let [graph (expr/expression-graph f)]
+;    (fn [x & y]
+;      (let [graph (-top-down (-bottom-up (-set-values graph x y)))]
+;        (:adjoint
+;         (nth
+;          (filter
+;           (fn [node] (:is-variable node))
+;           (vals (into (sorted-map) (:nodes graph))))
+;          idx))))))
 
 (defn grad [f idx]
-  (let [graph (-top-down (-bottom-up (expr/expression-graph f)))]
-    (:adjoint (nth (filter
-                     (fn [node] (:is-leaf node))
-                     (vals (into (sorted-map) (:nodes graph)))
-                     ) idx)
-      ) )
-  )
+  ; todo: separate expression graph computation and topdown
+  (let [graph (expr/expression-graph f)]
+    graph))
+
+;(defn log-pdf [y mu sigma]
+;  (- (/ (Math/pow (- y mu) 2.0) (* (- 2.0) (Math/pow sigma 2.0)))
+;     (Math/log sigma)
+;     (/ (Math/log (* 2.0 Math/PI)) 2.0)))
+
+(defn log-pdf [y mu]
+     (/ (Math/log (* y Math/PI)) mu))
+
+(defn -main
+  [& args]
+  (print (grad log-pdf 1)))
