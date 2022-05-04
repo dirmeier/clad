@@ -11,7 +11,7 @@
            (fn [g ans x] g)]
    "-"    [(fn [g ans x] (= (count x) 1) (- g) g)
            (fn [g ans x] (- g))]
-   "*"    [(fn [g ans x] (* g (last x) ))
+   "*"    [(fn [g ans x] (* g (last x)))
            (fn [g ans x] (* g (first x)))]
    "/"    [(fn [g ans x] (/ g (last x)))
            (fn [g ans x] (* (- g) (* (first x) (Math/sqrt (last x)))))]

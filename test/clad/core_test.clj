@@ -1,5 +1,5 @@
 (ns clad.core-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [clad.core :refer [grad]]))
 
 (defn log-pdf ^double [^double y ^double mu ^double sigma]
@@ -7,9 +7,9 @@
      (Math/log sigma)
      (/ (Math/log (* 2.0 Math/PI)) 2.0)))
 ;
-;(defn tanh ^double [^double x ^double y]
-;  (/ (1.0 - (Math/exp (- x)))
-;     (1.0 + (Math/exp (- y)))))
+(defn tanh [x y]
+  (/ (1.0 - (Math/exp (- x)))
+     (1.0 + (Math/exp (- y)))))
 
 (def log-pdf "(* (* 2.0 Math/PI) 7.0)")
 

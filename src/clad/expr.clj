@@ -1,9 +1,8 @@
 (ns clad.expr
-  (:require [instaparse.core :as insta])
-  (:require [clojure.core.matrix :as m])
-  (:require [clad.ops :as ops])
-  (:require [clad.util :as utl])
-  (:require [clad.node :as node]))
+  (:require [clojure.repl :refer [source-fn demunge]]
+            [clojure.core.matrix :as m]
+            [instaparse.core :as insta]
+            [clad.node :as node]))
 
 (def ^:private grammar
   "exprs =  exps
@@ -23,20 +22,31 @@
    regex =  #'#\"(\\\\\"|[^\"])*\"'
    comment = #';[^\\n\\r]*'
    <literal> = anfn | unquote | unquote-splice | meta
-             | var | quote | op | keyword | char | scalar
+             | var | quote | op | char | scalar
    anfn = '#' list
    quote = '\\'' ws? exp
    unquote = <'~'> ws? exp
    unquote-splice = <'~@'> ws? exp
    meta = <'^'> ws? exp
    var = <'#\\''> ws? exp
-   op = '*' | '/' | '+' | '-' | sym-pat
-   scalar = 'clojure.core/' | 'Math/PI'
-   keyword = ':' ':'? sym-pat
+   op = '*' | '/' | '+' | '-' | 'Math/log' | 'Math/exp' | 'Math/pow' | sym-pat
+   scalar = 'Math/PI' | 'mu' | 'y' | 'sigma' | 'x' | 'z'
    <sym-pat> = #'[^@~(),\\\\;`\\[\\]{}~^\\s:#/\\'\\d]((:?[^@~(),\\\\;`\\[\\]{}~^\\s:])*[^@~(),\\\\;`\\[\\]{}~^\\s:/])?'
    char = #'\\\\(newline|space|tab|backspace|formfeed|return|.|\\n)'
    <ws> = <#'[\\s,]+'>
   ")
+
+(def consts {"Math/PI" Math/PI})
+
+(defn -cast-value [value]
+  (if (string? value)
+    (try
+      (Double/parseDouble value)
+      (catch Exception _
+        (if (nil? (get consts value))
+          0.0
+          (get consts value))))
+    value))
 
 (defn ^:private -create-node [parent list]
   (if (identical? (get list 0) :list)
@@ -44,19 +54,20 @@
     (if (identical? (get (first list) 0) :op)
       (let
        [op (get (first list) 1)
-        child (node/create-node op parent [] 0.0 0.0)]
+        child (node/create-node op parent [] 0.0 0.0 nil)]
         (loop [remaining-grand-children (rest list)
                grand-children []]
           (if (empty? remaining-grand-children)
             grand-children
             (let [[part & remaining] remaining-grand-children]
               (recur remaining (conj grand-children (-create-node child part)))))))
-      (node/create-node (get list 0) parent [] 0.0 (get list 1)))))
+      (node/create-node (get list 0) parent [] 0.0 (-cast-value (get list 1)) (get list 1)))))
 
 (defn ^:private -build-tree [parent rest]
   (loop [nodes rest leaves []]
     (if (empty? nodes)
-     (doall (map (fn [leaf] (assoc leaf :is-leaf true)) leaves))
+      leaves
+      ;(doall (map (fn [leaf] (assoc leaf :is-variable (if (= 0.0 (:value leaf)) true false))) leaves))
       (let [[part & remaining] nodes]
         (recur remaining
                (into leaves
@@ -68,7 +79,8 @@
     (if
      (identical? (get root-node 0) :op)
       (let [root-op (get root-node 1)]
-        (node/create-node root-op nil [] 1.0 0.0)))))
+        (node/create-node root-op nil [] 1.0 0.0 nil))
+      nil)))
 
 (defn ^:private -adjacency [graph]
   (let [n-nodes (+ (reduce max (map (fn [element] (:idx element)) graph)) 1)]
@@ -89,18 +101,30 @@
       new-nodes
       (let [[part & remaining] remaining-nodes]
         (recur
-         (if (nil? (:parent part))
-           remaining (conj remaining (:parent part)))
+         (if
+           (nil? (:parent part))
+           remaining
+           (conj remaining (:parent part)))
          (assoc new-nodes (:idx part) {:op (:op part)
                                        :adjoint (:adjoint part)
-                                       :is-leaf (:is-leaf part)
+                                       :is-variable (:is-variable part)
+                                       :name (:name part)
                                        :value (:value part)}))))))
 
+(defn fn-source [f]
+  (let [fn-name (-> f .getClass .getName)
+        fn-name (demunge fn-name)
+        fn-sym (symbol fn-name)]
+    (source-fn fn-sym)))
+
 (defn expression-graph [f]
-  (let [grammar (rest (get ((insta/parser grammar) f) 1))
+  (let [parsed (get ((insta/parser grammar) (fn-source f)) 1)
+        grammar (rest (get parsed 4))
+        args (map (fn [el] (second el)) (rest (get parsed 3)))
         root (-create-root grammar)
         graph (-build-tree root (rest grammar))
-        adj (-adjacency graph)
-        nodes (-graph-as-set graph)]
-    {:adj adj :nodes nodes}))
+        ;adj (-adjacency graph)
+        ;nodes (-graph-as-set graph)
+        ]
+    {:args args :adj 3 :nodes graph}))
 
