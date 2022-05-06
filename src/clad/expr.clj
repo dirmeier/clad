@@ -36,6 +36,7 @@
    <ws> = <#'[\\s,]+'>
   ")
 
+
 (def consts {"Math/PI" Math/PI})
 
 (defn -cast-value [value]
@@ -66,13 +67,12 @@
 (defn ^:private -build-tree [parent rest]
   (loop [nodes rest leaves []]
     (if (empty? nodes)
-      leaves
-      ;(doall (map (fn [leaf] (assoc leaf :is-variable (if (= 0.0 (:value leaf)) true false))) leaves))
+      (doall (map (fn [leaf] (assoc leaf :is-variable (if (= 0.0 (:value leaf)) true false))) (flatten leaves)))
       (let [[part & remaining] nodes]
         (recur remaining
                (into leaves
                      (let [n (-create-node parent part)]
-                       (if (vector? n) n [n]))))))))
+                       (if (or (list? n) (vector? n)) n [n]))))))))
 
 (defn ^:private -create-root [graph]
   (let [root-node (first graph)]
@@ -123,8 +123,12 @@
         args (map (fn [el] (second el)) (rest (get parsed 3)))
         root (-create-root grammar)
         graph (-build-tree root (rest grammar))
-        ;adj (-adjacency graph)
-        ;nodes (-graph-as-set graph)
+        adj (-adjacency graph)
+        nodes (-graph-as-set graph)
         ]
-    {:args args :adj 3 :nodes graph}))
+    ((println adj)
 
+     (doseq [item nodes] (println item))
+
+     {:args args :adj adj :nodes graph})
+    ))
