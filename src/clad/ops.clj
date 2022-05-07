@@ -1,10 +1,19 @@
-(ns clad.ops)
+(ns clad.ops
+  (:require [clojure.string :as str]))
+
+(def  ^:private -ops
+  {"*"  [(fn [x y] (* x y))]
+   "/"  [(fn [x y] (/ x y))]
+   "-"  [(fn [x & y] (if (nil? y) (- x) (- x (first y))))]
+   "+"  [(fn [x & y] (if (nil? y) (+ x) (+ x (first y))))]
+   "Math/log"  [(fn [x] (Math/log x))]
+   "Math/exp"  [(fn [x] (Math/exp x))]
+   "Math/pow"  [(fn [x y] (Math/pow x y))]})
 
 (defn get-op [op]
-  (get
-   {"/" (fn [x y] (/ x y))
-    "*" (fn [x y] (* x y))}
-   op))
+  (if (contains? -ops op)
+    (get (get -ops op) 0)
+    (println (str "Key " op "is not a defined operation"))))
 
 (def ^:private -adjs
   {"+"    [(fn [g ans x] g)

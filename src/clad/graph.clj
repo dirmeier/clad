@@ -1,5 +1,5 @@
 (ns clad.graph
-  (:require [clojure.core.matrix :as m :exclude [abs]]
+  (:require [clojure.core.matrix :as m]
             [clad.util :as utl]))
 
 (defn ^:private -adj-to-edge-map [graph]
