@@ -36,7 +36,6 @@
    <ws> = <#'[\\s,]+'>
   ")
 
-
 (def consts {"Math/PI" Math/PI})
 
 (defn -cast-value [value]
@@ -102,7 +101,7 @@
       (let [[part & remaining] remaining-nodes]
         (recur
          (if
-           (nil? (:parent part))
+          (nil? (:parent part))
            remaining
            (conj remaining (:parent part)))
          (assoc new-nodes (:idx part) {:op (:op part)
@@ -124,11 +123,5 @@
         root (-create-root grammar)
         graph (-build-tree root (rest grammar))
         adj (-adjacency graph)
-        nodes (-graph-as-set graph)
-        ]
-    ((println adj)
-
-     (doseq [item nodes] (println item))
-
-     {:args args :adj adj :nodes graph})
-    ))
+        nodes (-graph-as-set graph)]
+    {:args args :adj adj :nodes nodes}))

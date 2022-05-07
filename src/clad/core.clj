@@ -21,13 +21,13 @@
              (assoc new-nodes curr-node-idx curr-node)
              (assoc new-nodes curr-node-idx
                     (assoc
-                      curr-node
-                           :value
-                           (reduce
-                            (ops/get-op (:op curr-node))
-                            (map
-                             (fn [idx] (:value (get new-nodes idx)))
-                             (utl/positions #{1} (m/get-row adj curr-node-idx)))))))))))))
+                     curr-node
+                     :value
+                     (reduce
+                      (ops/get-op (:op curr-node))
+                      (map
+                       (fn [idx] (:value (get new-nodes idx)))
+                       (utl/positions #{1} (m/get-row adj curr-node-idx)))))))))))))
 
 (defn ^:private -get-parent-idxs [adj idx]
   (let [column (m/get-column adj idx)
@@ -69,33 +69,35 @@
                           curr-node (assoc curr-node :adjoint (+ (:adjoint curr-node) adj))]
                       curr-node))))))))))))
 
-(defn -set-values [graph x & y] graph)
-
-;(defn grad [f idx]
-;  ; todo: separete expression graph computation and topdown
-;  (let [graph (expr/expression-graph f)]
-;    (fn [x & y]
-;      (let [graph (-top-down (-bottom-up (-set-values graph x y)))]
-;        (:adjoint
-;         (nth
-;          (filter
-;           (fn [node] (:is-variable node))
-;           (vals (into (sorted-map) (:nodes graph))))
-;          idx))))))
+(defn -set-values [graph y]
+  (let [nodes (:nodes graph)
+        leaves (select-keys (into (sorted-map) nodes) (for [[k v] nodes :when (:is-variable v)] k))]
+    (loop [leaves leaves
+           y y
+           new-nodes nodes]
+      (if
+       (empty? leaves)
+        {:args (:args graph) :adj (:adj graph) :nodes new-nodes}
+        (let [[kv-node & remaining-leaves] leaves
+              [value & remaining-values] y]
+          (recur
+           remaining-leaves
+           remaining-values
+           (let [node (val kv-node)
+                 key (key kv-node)]
+             (assoc new-nodes key (assoc node :value value)))))))))
 
 (defn grad [f idx]
-  ; todo: separate expression graph computation and topdown
   (let [graph (expr/expression-graph f)]
-    graph))
+    (fn [& y]
+      (let [graph (-top-down (-bottom-up (-set-values graph y)))]
+        (:adjoint
+         (nth
+          (filter
+           (fn [node] (:is-variable node))
+           (vals (into (sorted-map) (:nodes graph))))
+          idx))))))
 
-;(defn log-pdf [y mu sigma]
-;  (- (/ (Math/pow (- y mu) 2.0) (* (- 2.0) (Math/pow sigma 2.0)))
-;     (Math/log sigma)
-;     (/ (Math/log (* 2.0 Math/PI)) 2.0)))
 
-(defn log-pdf [y mu]
-     (/ (Math/log (* y Math/PI)) mu))
-
-(defn -main
-  [& args]
-  (print (grad log-pdf 1)))
+(defn grad [f idx]
+  (expr/expression-graph f))
