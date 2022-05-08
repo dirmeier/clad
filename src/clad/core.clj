@@ -9,6 +9,8 @@
   (let [sorted-node-idxs (graph/topological-sort graph)
         adj (:adj graph)
         nodes (:nodes graph)]
+    ; TODO: does not set ALL nodes with same name (e.g. sigma
+    (doseq [item nodes] (println item))
     (loop [remaining-node-idxs sorted-node-idxs new-nodes {}]
       (if (empty? remaining-node-idxs)
         {:adj adj :nodes new-nodes}
@@ -19,15 +21,17 @@
            (if
             (= (reduce + (m/get-row adj curr-node-idx)) 0.0)
              (assoc new-nodes curr-node-idx curr-node)
-             (assoc new-nodes curr-node-idx
-                    (assoc
-                     curr-node
-                     :value
-                     (reduce
-                      (ops/get-op (:op curr-node))
-                      (map
-                       (fn [idx] (:value (get new-nodes idx)))
-                       (utl/positions #{1} (m/get-row adj curr-node-idx)))))))))))))
+             (let [children (utl/positions #{1} (m/get-row adj curr-node-idx))]
+               (assoc new-nodes curr-node-idx
+                                (assoc
+                                  curr-node
+                                  :value
+                                  (reduce
+                                    (ops/get-op (:op curr-node))
+                                    (map
+                                      (fn [idx] (:value (get new-nodes idx)))
+                                      children)))))
+             )))))))
 
 (defn ^:private -get-parent-idxs [adj idx]
   (let [column (m/get-column adj idx)
@@ -86,6 +90,16 @@
            (let [node (val kv-node)
                  key (key kv-node)]
              (assoc new-nodes key (assoc node :value value)))))))))
+;(defn grad [f idx]
+;  (let [graph (expr/expression-graph f)]
+;    (fn [& y]
+;      (let [graph (-top-down (-bottom-up (-set-values graph y)))]
+;        (:adjoint
+;          (nth
+;            (filter
+;              (fn [node] (:is-variable node))
+;              (vals (into (sorted-map) (:nodes graph))))
+;            idx))))))
 
 (defn grad [f idx]
   (let [graph (expr/expression-graph f)]
@@ -97,7 +111,3 @@
            (fn [node] (:is-variable node))
            (vals (into (sorted-map) (:nodes graph))))
           idx))))))
-
-
-(defn grad [f idx]
-  (expr/expression-graph f))

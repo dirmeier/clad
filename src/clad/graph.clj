@@ -1,6 +1,6 @@
 (ns clad.graph
-  (:require [clojure.core.matrix :as m]
-            [clad.util :as utl]))
+  (:require [clojure.core.matrix :as m]))
+
 
 (defn ^:private -adj-to-edge-map [graph]
   (let [adj (:adj graph)
@@ -18,20 +18,26 @@
               (+ j 1)
               (if (= (m/mget adj i j) 1) (conj parent-node-row j) parent-node-row)))))))))
 
+
+(defn -remove-values [hashmap items]
+  (loop [rem-items items mmap hashmap]
+    (if (empty? rem-items)
+      mmap
+      (let [[item & remaining] rem-items]
+        (recur remaining (into {} (map (fn [[k v]] [k (remove #{item} v)])) mmap))))))
+
+
+(defn -drop-empty [mmap]
+  (doall (filter #(> (count (val %)) 0) mmap)))
+
+
 (defn topological-sort [graph]
   (let [edge-map (-adj-to-edge-map graph)]
-    (loop [node-topological [] current-edge-map edge-map]
+    (loop [node-topological []
+           current-edge-map edge-map]
       (if (empty? current-edge-map)
         node-topological
         (let [nodes (filter #(= (count (get current-edge-map %)) 0) (keys current-edge-map))]
           (recur
            (into node-topological nodes)
-           (let [current-edge-map (apply dissoc current-edge-map nodes)
-                 keys (keys current-edge-map)]
-             (loop [curk keys curm current-edge-map]
-               (if (empty? curk)
-                 curm
-                 (let [[part & remaining] curk]
-                   (recur
-                    remaining
-                    (assoc curm part (utl/filter-map (get curm part) keys)))))))))))))
+           (-remove-values (-drop-empty current-edge-map) nodes)))))))
