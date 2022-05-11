@@ -1,7 +1,7 @@
 # clad
 
 [![Project Status](http://www.repostatus.org/badges/latest/concept.svg)](http://www.repostatus.org/#concept)
-[![Build status](https://github.com/dirmeier/clad/workflows/CI/badge.svg)](https://github.com/dirmeier/clad/actions)
+[![Build status](https://github.com/dirmeier/clad/workflows/ci/badge.svg)](https://github.com/dirmeier/clad/actions)
 
 > Reverse-mode autodiff for Clojure
 
