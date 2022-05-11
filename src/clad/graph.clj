@@ -1,7 +1,6 @@
 (ns clad.graph
   (:require [clojure.core.matrix :as m]))
 
-
 (defn ^:private -adj-to-edge-map [graph]
   (let [adj (:adj graph)
         m (m/row-count adj)
@@ -18,7 +17,6 @@
               (+ j 1)
               (if (= (m/mget adj i j) 1) (conj parent-node-row j) parent-node-row)))))))))
 
-
 (defn -remove-values [hashmap items]
   (loop [rem-items items mmap hashmap]
     (if (empty? rem-items)
@@ -26,10 +24,8 @@
       (let [[item & remaining] rem-items]
         (recur remaining (into {} (map (fn [[k v]] [k (remove #{item} v)])) mmap))))))
 
-
 (defn -drop-empty [mmap]
   (doall (filter #(> (count (val %)) 0) mmap)))
-
 
 (defn topological-sort [graph]
   (let [edge-map (-adj-to-edge-map graph)]

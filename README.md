@@ -7,21 +7,22 @@
 
 ## Introduction
 
-This package implements a proof-of-concept of reverse-mode autodiff in Clojure. It is mainly thought for learning Clojure,
-offers minimal functionality and lacks (code) quality. 
+This package implements a proof-of-concept of reverse-mode autodiff in Clojure. It is mainly thought for learning Clojure, 
+hence it offers minimal functionality, lacks (code) quality, and is probably buggy. 
 
 ```{clojure}
 (require '[clad.core :refer [grad]])
 
-(defn log-pdf ^double [^double y ^double mu ^double sigma]
-  (- (/ (Math/pow (- y mu) 2.0) (* -2.0 (Math/pow sigma 2.0)))
-     (Math/log sigma)
-     (/ (Math/log (* 2.0 Math/PI)) 2.0)))
+(defn f [x y]
+  (/ (- 1.0 (Math/exp (- x)))
+     (+ 1.0 (Math/exp (- y)))))
      
-(def (grad(logpdf, 0) 1.0 0.0 1.0))
-=> -1.0
+(def g ((grad f 0) 2.0 1.0))
+
+g
+=> 0.0989
 ```
 
 ## Author
 
-* Simon Dirmeier <a href="mailto:sfyrbnd @ pm me">sfyrbnd @ pm me</a>
+Simon Dirmeier <a href="mailto:sfyrbnd @ pm me">sfyrbnd @ pm me</a>
