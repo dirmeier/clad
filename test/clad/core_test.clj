@@ -6,13 +6,12 @@
   (/ (- 1.0 (Math/exp (- x)))
      (+ 1.0 (Math/exp (- y)))))
 
-
 (defn close-to?
   [x y epsilon]
   (<= (abs (- x y)) epsilon))
 
-(deftest test-tanh-gradients
+(deftest test-gradients
+  (testing "gradient w.r.t x"
+    (is (close-to? ((grad f 0) 2.0 1.0) 0.09893801980144722 0.001)))
   (testing "gradient w.r.t y"
-    (is (close-to? ((grad f 0) 1.0 2.0) 0.3240271368319427 0.001)))
-  (testing "gradient w.r.t mu"
-    (is (close-to? ((grad f 1) 1.0 2.0) 0.06636860387867843 0.001))))
+    (is (close-to? ((grad f 1) 2.0 1.0) 0.17000340156854793 0.001))))
